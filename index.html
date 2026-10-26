@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6feb">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>محاسبة كانتين الكتيبة</title>
+<style>
+:root{--bg:#f4f6f8;--fg:#1c1f24;--card:#fff;--bd:#d6dbe1;--ac:#1f6feb;--on:#fff;--sum:#e6efff;--tax:#fff0d9;--fin:#dff3e2;--mut:#5d6672;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#eceff3;--card:#1e2227;--bd:#343a42;--ac:#5b9cff;--on:#0b1220;--sum:#1c2a40;--tax:#3a2f1a;--fin:#1b3322;--mut:#9aa3ad}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#eceff3;--card:#1e2227;--bd:#343a42;--ac:#5b9cff;--on:#0b1220;--sum:#1c2a40;--tax:#3a2f1a;--fin:#1b3322;--mut:#9aa3ad}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 Tahoma,Arial,sans-serif;padding:8px}
+nav{display:flex;gap:4px;margin-bottom:8px}nav button{flex:1;padding:10px 2px;font-size:14px;border:1px solid var(--bd);background:var(--card);color:var(--fg);border-radius:8px}
+nav button.on{background:var(--ac);color:var(--on);border-color:var(--ac)}
+section{display:none;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px}section.on{display:block}
+input{width:100%;padding:10px;margin:3px 0;font-size:16px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--fg)}
+.r{display:grid;grid-template-columns:2fr 1fr 1fr;gap:4px}.r .b{grid-column:1/-1}
+.b,.o button,.x button{padding:10px;font-size:15px;border:0;border-radius:8px;background:var(--ac);color:var(--on);margin:3px 0;width:100%}
+.o button,.x button{width:auto;padding:4px 10px;background:transparent;color:var(--mut);border:1px solid var(--bd)}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px}td,th{border:1px solid var(--bd);padding:5px;text-align:center}th{background:var(--sum)}
+.s td{background:var(--sum)}.t td{background:var(--tax)}.f td{background:var(--fin);font-weight:bold}
+.m{color:var(--mut);font-size:13px;margin:6px 0}h3{margin:10px 0 2px;font-size:15px}
+</style></head><body>
+<nav><button data-t=a class=on>تلقائية</button><button data-t=m>يدوية</button><button data-t=p>الأسعار</button><button data-t=v>فواتير سابقة</button></nav>
+<datalist id=nm></datalist>
+
+<section id=a class=on>
+<input id=A1 inputmode=decimal placeholder="المبلغ النهائي (شامل الضريبة)">
+<input id=A2 placeholder="الأصناف مفصولة بعلامة +  مثال: شاي+كوب+سكر">
+<button class=b id=A3>احسب</button><div id=A4></div><div class=m id=A5></div>
+</section>
+
+<section id=m><div id=M1></div><div id=M2></div></section>
+
+<section id=p>
+<div class=r><input id=P1 list=nm placeholder="اسم الصنف" style="grid-column:1/3"><input id=P2 inputmode=decimal placeholder="السعر"><button class=b id=P3>حفظ / تعديل</button></div>
+<div id=P4 class=x></div>
+</section>
+
+<section id=v>
+<input id=V1 placeholder="اسم الفاتورة (اختياري)">
+<div id=V2></div><div id=V3></div>
+<button class=b id=V4>حفظ الفاتورة</button>
+<h3>الفواتير المحفوظة</h3><div id=V5 class=x></div>
+</section>
+
+<script>
+const $=i=>document.getElementById(i);
+const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
+const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nz=s=>s.trim().toLowerCase().replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/\s+/g,' ');
+const f=c=>(c/100).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
+const pt=c=>String(+(c/100).toFixed(2));
+const cn=x=>Math.round(parseFloat(String(x).replace(',','.'))*100);
+let P=ld('p',{}),V=ld('v',[]);
+
+function learn(){const pr={},ac={};
+ for(const v of V){const L={};let T=0;
+  for(const[n,q,c]of v.items){const k=nz(n),a=q*c;pr[k]=c;L[k]=(L[k]||0)+a;T+=a}
+  if(T>0)for(const k in L)(ac[k]=ac[k]||[]).push(L[k]/T)}
+ const sh={};for(const k in ac)sh[k]=ac[k].reduce((a,b)=>a+b)/ac[k].length;return[pr,sh]}
+const pf=n=>{const k=nz(n);return P[k]?P[k][1]:learn()[0][k]};
+
+// GEN-START
+function gen(F,names,lk,sh){
+ const tax=Math.round(F*.14/1.14),net=F-tax,n=names.length,L=n-1;
+ const fx=names.map(x=>lk[nz(x)]),lr=names.map(x=>sh[nz(x)]),got=lr.filter(Boolean);
+ let bs,jt;
+ if(got.length){const m=got.reduce((a,b)=>a+b)/got.length;bs=lr.map(x=>x||m);jt=[.8,1.2]}
+ else{const kn=fx.filter(Boolean).map(p=>p**-.5),m=kn.length?kn.reduce((a,b)=>a+b)/kn.length:1;bs=fx.map(p=>p?p**-.5:m);jt=[.6,1.4]}
+ let best=null;
+ for(let t=0;t<4000;t++){
+  const w=bs.map(b=>b*(jt[0]+Math.random()*(jt[1]-jt[0]))),ws=w.reduce((a,b)=>a+b),rows=[];let used=0;
+  for(let i=0;i<L;i++){let q,p=fx[i];
+   if(p)q=Math.max(1,Math.round(net*w[i]/ws/p));
+   else{q=1+Math.floor(Math.random()*10);p=Math.max(25,Math.round(net*w[i]/ws/q/25)*25)}
+   rows.push([names[i],q,p]);used+=q*p}
+  const rest=net-used,p0=fx[L];let q,p,dev=0;
+  if(rest<(p0?1:25))continue;
+  if(p0){let b=1e9;for(let k=1;k<=500;k++)if(rest%k==0){const d=Math.abs(rest/k-p0)/p0;if(d<b){b=d;q=k}}p=rest/q;dev=b}
+  else{const qs=[1,2,3,4,5,6,7,8,9,10].sort(()=>Math.random()-.5);q=qs.find(k=>rest%k==0&&(rest/k)%25==0&&rest/k>=25)||1;p=rest/q}
+  rows.push([names[L],q,p]);
+  if(!best||dev<best.d)best={d:dev,rows,fl:dev>0?names[L]:null};
+  if(dev<=.01)break}
+ return best&&{rows:best.rows,fl:best.fl,sum:net,tax,fin:F}}
+// GEN-END
+
+function tbl(rows,s,x){let h='<table><tr><th>الصنف<th>الكمية<th>السعر<th>الإجمالي'+(x?'<th>':'')+'</tr>';
+ rows.forEach((r,i)=>h+=`<tr><td>${esc(r[0])}<td>${r[1]}<td>${f(r[2])}<td>${f(Math.round(r[1]*r[2]))}`+(x?`<td><button data-i=${i}>×</button>`:'')+'</tr>');
+ const sp=x?4:3;
+ h+=`<tr class=s><td colspan=3>إجمالي الأصناف<td>${f(s.sum)}`+(x?'<td>':'');
+ if(s.tax!=null)h+=`<tr class=t><td colspan=3>الضريبة 14%<td>${f(s.tax)}`+(x?'<td>':'')+`<tr class=f><td colspan=3>المبلغ النهائي (شامل الضريبة)<td>${f(s.fin)}`+(x?'<td>':'');
+ return h+'</table>'}
+
+function dl(){const s=new Set(Object.values(P).map(v=>v[0]));
+ V.forEach(v=>v.items.forEach(i=>s.add(i[0])));$('nm').innerHTML=[...s].map(x=>`<option value="${esc(x)}">`).join('')}
+
+// ---- تبويب تلقائي
+$('A3').onclick=()=>{
+ const F=cn($('A1').value),names=$('A2').value.replace(/＋/g,'+').split('+').map(x=>x.trim()).filter(Boolean);
+ if(!(F>0)||!names.length)return alert('اكتب المبلغ النهائي والأصناف');
+ const[pr,sh]=learn(),lk={...pr};for(const k in P)lk[k]=P[k][1];
+ const r=gen(F,names,lk,sh);if(!r)return alert('المبلغ صغير جدًا بالنسبة للأصناف');
+ $('A4').innerHTML=tbl(r.rows,r);
+ const nt=[];if(names.some(x=>sh[nz(x)]))nt.push('تم التوزيع حسب الفواتير السابقة.');
+ const un=names.filter(x=>!lk[nz(x)]);if(un.length)nt.push('أصناف بدون سعر محفوظ (عشوائية): '+un.join('، '));
+ if(r.fl)nt.push('تم تعديل سعر «'+r.fl+'» عن المحفوظ ليظبط المجموع.');
+ $('A5').textContent=nt.join(' ')};
+
+// ---- محرر أصناف (يدوي + فواتير سابقة)
+function ed(host,arr,after){
+ host.innerHTML='<div class=r><input list=nm placeholder="اسم الصنف"><input inputmode=decimal placeholder="الكمية"><input inputmode=decimal placeholder="السعر"><button class=b>إضافة</button></div><div class=o></div>';
+ const[n,q,p]=host.querySelectorAll('input'),o=host.querySelector('.o');
+ const draw=()=>{o.innerHTML=arr.length?tbl(arr,after(arr),1):''};
+ n.onchange=()=>{if(!p.value){const c=pf(n.value);if(c)p.value=pt(c)}};
+ const add=()=>{const a=parseFloat(q.value.replace(',','.')),c=cn(p.value);
+  if(!n.value.trim()||!(a>0)||!(c>0))return alert('اكتب اسم الصنف والكمية والسعر');
+  arr.push([n.value.trim(),a,c]);n.value=q.value=p.value='';n.focus();draw()};
+ host.querySelector('.b').onclick=add;
+ [n,q,p].forEach(e=>e.onkeydown=ev=>{if(ev.key=='Enter')add()});
+ o.onclick=e=>{const i=e.target.dataset.i;if(i!=null){arr.splice(i,1);draw()}};
+ return draw}
+
+const sumOf=a=>a.reduce((s,r)=>s+Math.round(r[1]*r[2]),0);
+const man=[];ed($('M1'),man,a=>{const s=sumOf(a),t=Math.round(s*.14);return{sum:s,tax:t,fin:s+t}});
+$('M2').innerHTML='<button class=b onclick="man.length=0;$(\'M1\').querySelector(\'.o\').innerHTML=\'\'">مسح الفاتورة</button>';
+
+// ---- قائمة الأسعار
+function rp(){const ks=Object.keys(P).sort();
+ $('P4').innerHTML=ks.length?'<table><tr><th>الصنف<th>السعر<th></tr>'+ks.map(k=>`<tr><td>${esc(P[k][0])}<td>${f(P[k][1])}<td><button data-k="${esc(k)}">×</button></tr>`).join('')+'</table>':'<div class=m>لا توجد أسعار محفوظة.</div>';dl()}
+$('P3').onclick=()=>{const n=$('P1').value.trim(),c=cn($('P2').value);
+ if(!n||!(c>0))return alert('اكتب اسم الصنف وسعره');
+ P[nz(n)]=[n,c];sv('p',P);$('P1').value=$('P2').value='';rp()};
+$('P4').onclick=e=>{const k=e.target.dataset.k;if(k){delete P[k];sv('p',P);rp()}else{const tr=e.target.closest('tr');
+ if(tr&&tr.rowIndex>0){const kk=Object.keys(P).sort()[tr.rowIndex-1];$('P1').value=P[kk][0];$('P2').value=pt(P[kk][1])}}};
+
+// ---- فواتير سابقة
+let dr=[];const drw=ed($('V2'),dr,a=>({sum:sumOf(a)}));
+function rv(){$('V5').innerHTML=V.length?'<table><tr><th>الفاتورة<th>المجموع<th></tr>'+V.map((v,i)=>`<tr><td>${esc(v.t)}<br><span class=m>${v.items.map(x=>esc(x[0])+'×'+x[1]).join('، ')}</span><td>${f(sumOf(v.items))}<td><button data-i=${i}>×</button></tr>`).join('')+'</table>':'<div class=m>لا توجد فواتير محفوظة.</div>';dl()}
+$('V4').onclick=()=>{if(!dr.length)return alert('أضف صنفًا واحدًا على الأقل');
+ V.push({t:$('V1').value.trim()||'فاتورة '+(V.length+1),items:dr.map(x=>x.slice())});sv('v',V);
+ dr.length=0;$('V1').value='';$('V2').querySelector('.o').innerHTML='';rv()};
+$('V5').onclick=e=>{const i=e.target.dataset.i;if(i!=null&&confirm('حذف الفاتورة؟')){V.splice(i,1);sv('v',V);rv()}};
+
+// ---- التبويبات
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+ document.querySelectorAll('nav button,section').forEach(x=>x.classList.remove('on'));
+ b.classList.add('on');$(b.dataset.t).classList.add('on')});
+rp();rv();
+</script><script>
+if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body></html>
