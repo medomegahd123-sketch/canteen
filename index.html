@@ -9,10 +9,13 @@
 <meta name="mobile-web-app-capable" content="yes">
 <title>محاسبة كانتين الكتيبة</title>
 <style>
-:root{--bg:#f4f6f8;--fg:#1c1f24;--card:#fff;--bd:#d6dbe1;--ac:#1f6feb;--on:#fff;--sum:#e6efff;--tax:#fff0d9;--fin:#dff3e2;--mut:#5d6672;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#eceff3;--card:#1e2227;--bd:#343a42;--ac:#5b9cff;--on:#0b1220;--sum:#1c2a40;--tax:#3a2f1a;--fin:#1b3322;--mut:#9aa3ad}}
-:root[data-theme="dark"]{--bg:#14171b;--fg:#eceff3;--card:#1e2227;--bd:#343a42;--ac:#5b9cff;--on:#0b1220;--sum:#1c2a40;--tax:#3a2f1a;--fin:#1b3322;--mut:#9aa3ad}
+:root{--bg:#f4f6f8;--fg:#1c1f24;--card:#fff;--bd:#d6dbe1;--ac:#1f6feb;--on:#fff;--sum:#e6efff;--tax:#fff0d9;--fin:#dff3e2;--mut:#5d6672;--hd:#4b5320;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#eceff3;--card:#1e2227;--bd:#343a42;--ac:#5b9cff;--on:#0b1220;--sum:#1c2a40;--tax:#3a2f1a;--fin:#1b3322;--mut:#9aa3ad;--hd:#3a4219}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#eceff3;--card:#1e2227;--bd:#343a42;--ac:#5b9cff;--on:#0b1220;--sum:#1c2a40;--tax:#3a2f1a;--fin:#1b3322;--mut:#9aa3ad;--hd:#3a4219}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 Tahoma,Arial,sans-serif;padding:8px}
+header{display:flex;align-items:center;gap:12px;background:var(--hd);color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:8px}
+#lg{width:60px;height:60px;flex:none;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.12)}#lg svg,#lg img{width:100%;height:100%;object-fit:cover;display:block}
+header h1{margin:0;font-size:19px;line-height:1.3}header small{opacity:.85;font-size:12px}
 nav{display:flex;gap:4px;margin-bottom:8px}nav button{flex:1;padding:10px 2px;font-size:14px;border:1px solid var(--bd);background:var(--card);color:var(--fg);border-radius:8px}
 nav button.on{background:var(--ac);color:var(--on);border-color:var(--ac)}
 section{display:none;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px}section.on{display:block}
@@ -24,6 +27,7 @@ table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px}td,th{bo
 .s td{background:var(--sum)}.t td{background:var(--tax)}.f td{background:var(--fin);font-weight:bold}
 .m{color:var(--mut);font-size:13px;margin:6px 0}h3{margin:10px 0 2px;font-size:15px}
 </style></head><body>
+<header><div id=lg><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="30" fill="#2f3a14" stroke="#c9a227" stroke-width="2"/><path d="M14 42Q9 28 20 15M50 42Q55 28 44 15" fill="none" stroke="#c9a227" stroke-width="2.5" stroke-linecap="round"/><polygon points="32,15 36.1,26.3 48.2,26.8 38.7,34.2 42,45.8 32,39 22,45.8 25.3,34.2 15.8,26.8 27.9,26.3" fill="#c9a227"/><path d="M22 52h20" stroke="#c9a227" stroke-width="2.5" stroke-linecap="round"/></svg></div><div><h1>كانتين الكتيبة</h1><small>محاسبة الفواتير</small></div></header>
 <nav><button data-t=a class=on>تلقائية</button><button data-t=m>يدوية</button><button data-t=p>الأسعار</button><button data-t=v>فواتير سابقة</button></nav>
 <datalist id=nm></datalist>
 
@@ -145,6 +149,9 @@ $('V4').onclick=()=>{if(!dr.length)return alert('أضف صنفًا واحدًا 
  V.push({t:$('V1').value.trim()||'فاتورة '+(V.length+1),items:dr.map(x=>x.slice())});sv('v',V);
  dr.length=0;$('V1').value='';$('V2').querySelector('.o').innerHTML='';rv()};
 $('V5').onclick=e=>{const i=e.target.dataset.i;if(i!=null&&confirm('حذف الفاتورة؟')){V.splice(i,1);sv('v',V);rv()}};
+
+// ---- شعار مخصص: ضع ملف logo.png بجانب index.html
+{const im=new Image();im.alt='';im.onload=()=>{$('lg').innerHTML='';$('lg').appendChild(im)};im.src='logo.png'}
 
 // ---- التبويبات
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
